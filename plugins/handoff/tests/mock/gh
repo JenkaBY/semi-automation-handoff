@@ -4,7 +4,7 @@
 # Concurrent writes: HF_MOCK_INTERFERE=<the GET of updated_at after which another
 # agent edits the comment>; HF_MOCK_INTERFERE_ALWAYS=1 — on every GET.
 set -u
-D="${HF_MOCK_DIR:?HF_MOCK_DIR не задан}"
+D="${HF_MOCK_DIR:?HF_MOCK_DIR is not set}"
 mkdir -p "$D/comments" "$D/issues"
 [ -f "$D/seq" ] || echo 1000 > "$D/seq"
 

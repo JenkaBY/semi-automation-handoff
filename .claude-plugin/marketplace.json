@@ -8,7 +8,7 @@
     {
       "name": "handoff",
       "source": "./plugins/handoff",
-      "description": "Полуавтоматическая передача задач между GitHub-репозиториями через issues, комментарии, лейблы и реакции",
+      "description": "Semi-automatic task handoff between GitHub repositories through issues, comments, labels and reactions",
       "version": "0.2.0",
       "displayName": "Handoff",
       "license": "MIT",

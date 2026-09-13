@@ -2,7 +2,7 @@
   "name": "handoff",
   "displayName": "Handoff",
   "version": "0.2.0",
-  "description": "Полуавтоматическая передача задач между GitHub-репозиториями: задача-родитель, коммент-результат, коммент-задача со статусами и задачи-депенденты в соседних репозиториях",
+  "description": "Semi-automatic task handoff between GitHub repositories: a parent task, a result comment carrying context, a routing comment with statuses, and dependent tasks in neighbouring repositories",
   "author": {
     "name": "jenkaBY",
     "url": "https://github.com/jenkaBY"
