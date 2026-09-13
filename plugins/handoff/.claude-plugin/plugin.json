@@ -1,0 +1,17 @@
+{
+  "name": "handoff",
+  "displayName": "Handoff",
+  "version": "0.2.0",
+  "description": "Полуавтоматическая передача задач между GitHub-репозиториями: задача-родитель, коммент-результат, коммент-задача со статусами и задачи-депенденты в соседних репозиториях",
+  "author": {
+    "name": "jenkaBY",
+    "url": "https://github.com/jenkaBY"
+  },
+  "homepage": "https://github.com/jenkaBY/semi-automation-handoff",
+  "repository": "https://github.com/jenkaBY/semi-automation-handoff",
+  "license": "MIT",
+  "keywords": ["github", "issues", "handoff", "multi-repo", "orchestration"],
+  "metadata": {
+    "protocolVersion": "1"
+  }
+}
