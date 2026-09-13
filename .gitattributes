@@ -1,0 +1,9 @@
+# The plugin ships shell scripts that must keep LF endings: a CRLF shebang
+# (`#!/usr/bin/env bash\r`) fails to execute in Git Bash, WSL and on Linux.
+* text=auto eol=lf
+*.sh text eol=lf
+bin/hf text eol=lf
+plugins/handoff/bin/hf text eol=lf
+plugins/handoff/tests/mock/gh text eol=lf
+*.md text eol=lf
+*.json text eol=lf
