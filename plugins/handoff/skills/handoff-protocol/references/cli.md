@@ -30,6 +30,8 @@ Accepted in any form: `42` · `#42` · `owner/repo#42` ·
 | `doctor [--repo SLUG]` | preconditions: gh, token, permissions, labels, versions | `ok\|WARN\|FAIL` plus the item |
 | `labels-ensure [--repo SLUG]` | create `agent-task` and `handoff:parent` | `ok<TAB>name` |
 | `config-init [--repo SLUG] --peers "a b"` | `.handoff/config.env`, `.gitignore`, `.claude/settings.json` | `config<TAB>path<TAB>mode` |
+| `peers-check [--repo SLUG] [--quiet]` | which neighbours' descriptions went stale (one GraphQL call per repo, no file contents) | `slug<TAB>new\|stale\|fresh\|unreachable<TAB>fingerprint<TAB>protocol<TAB>plugin` |
+| `peers-stamp --repo SLUG [--fingerprint FP]` | mark a neighbour's description as up to date | `peers-stamp<TAB>slug<TAB>fingerprint<TAB>date` |
 | `parent-ensure [--ref REF] --title T --body-file F` | create or mark the parent task | `parent<TAB>repo#N<TAB>url` |
 | `comment-add --ref REF --body-file F [--kind result\|question\|note]` | add a comment | `comment<TAB>id<TAB>url` |
 | `routing-ensure --ref REF [--chain C]` | find or create the routing comment | `routing<TAB>id<TAB>chain<TAB>url` |
@@ -49,6 +51,7 @@ Accepted in any form: `42` · `#42` · `owner/repo#42` ·
 | Code | Meaning | What the agent does |
 |---|---|---|
 | 0 | success | carry on |
+| 1 | `peers-check` only: something needs a refresh | re-survey the stale repositories |
 | 2 | configuration/argument error, or a precondition is unmet | fix the call, never retry blindly |
 | 3 | environment precondition failed (gh, auth, labels) | tell the human what to set up |
 | 4 | cycle or depth exceeded | do not delegate; BLOCKED plus a question |

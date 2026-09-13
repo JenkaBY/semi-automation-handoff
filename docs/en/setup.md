@@ -87,7 +87,7 @@ export HANDOFF_GH="/opt/gh/bin/gh"              # Linux / macOS
 In every participating repository:
 
 ```bash
-/plugin marketplace add jenkaBY/semi-automation-handoff@v0.2.0
+/plugin marketplace add jenkaBY/semi-automation-handoff@v0.3.0
 /plugin install handoff@handoff-marketplace
 ```
 
@@ -169,6 +169,7 @@ The command runs, in order:
 | `.claude/settings.json` | yes | auto-enables the marketplace and the plugin |
 | `.handoff/config.env` | yes | neighbours, limits, label names |
 | `.handoff/external-repos.md` | yes | the map of neighbours for the agent |
+| `.handoff/peers.lock` | yes | fingerprints of the map sources, so a refresh knows what changed |
 | `.handoff/state.env` | **no** | the session's current task, local state |
 
 ### Labels
@@ -192,3 +193,27 @@ Setup is complete when:
 - plugin versions match (`hf version`);
 - a trial `/handoff:dispatch` from repository A creates a task in repository B,
   and it shows up there in `/handoff:inbox`.
+
+## 6. Keeping the map current
+
+Neighbouring repositories evolve — purpose, stack and layout drift away from what
+`.handoff/external-repos.md` says, and a stale map makes the orchestrator delegate to
+the wrong place.
+
+```
+/handoff:refresh            # refresh what changed
+/handoff:refresh --check    # only report what is stale, change nothing
+```
+
+The refresh is cheap because it asks what changed before surveying anything:
+`hf peers-check` fetches one GraphQL response per repository containing only the blob
+ids of `README.md`, `AGENTS.md`, `CLAUDE.md` and `.handoff/config.env`, and compares
+them with `.handoff/peers.lock`. Subagents are then spent only on the repositories
+marked `stale` or `new`; `fresh` ones are skipped entirely.
+
+`hf doctor` shows the map's age from the lock file without any network call and warns
+once it passes `HANDOFF_MAP_MAX_AGE_DAYS` (30 by default), so the reminder arrives on
+its own. Refreshing is also worth doing right after a neighbour's big release.
+
+`peers-check` doubles as a health check of the fleet: it reports a neighbour with no
+plugin installed, and one whose protocol version has drifted from yours.

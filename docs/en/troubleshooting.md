@@ -76,6 +76,16 @@ Somebody marked the question answered without appending the answer text. Work mu
 resume: ask the human to append the answer to **that same** comment. A separate answer
 comment is not part of the protocol and will not be found.
 
+### `WARN peers-map` in doctor
+
+The map of neighbours has not been refreshed for longer than
+`HANDOFF_MAP_MAX_AGE_DAYS` (30 days by default), or `.handoff/peers.lock` does not
+exist yet. Run `/handoff:refresh`; it re-surveys only the repositories whose
+`README.md`, `AGENTS.md`, `CLAUDE.md` or `.handoff/config.env` actually changed.
+
+`hf peers-check` exits with 1 whenever something needs a refresh — that is its
+normal way of saying "there is work to do", not an error.
+
 ### A task does not show up in the inbox
 
 1. `hf inbox --all` — it may already be closed, that is, finished.
@@ -103,7 +113,7 @@ hf version    # in every repository
 Bring every repository to the same marketplace tag:
 
 ```
-/plugin marketplace add jenkaBY/semi-automation-handoff@v0.2.0
+/plugin marketplace add jenkaBY/semi-automation-handoff@v0.3.0
 ```
 
 ## Checking without a network

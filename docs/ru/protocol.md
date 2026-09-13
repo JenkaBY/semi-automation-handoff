@@ -114,7 +114,7 @@ routing: https://github.com/owner/api/issues/42#issuecomment-124
 path: owner/api>owner/web
 depth: 1
 protocol: 1
-plugin: 0.2.0
+plugin: 0.3.0
 ```
 </details>
 ```

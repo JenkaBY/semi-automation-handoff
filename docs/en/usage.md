@@ -83,6 +83,20 @@ hf question-status --ref <question url>
 
 Once you resume, clear the link: `hf status-set --ref 17 --status WIP --clear-question`.
 
+## Keeping the map of neighbours current
+
+Repositories evolve, and a stale `.handoff/external-repos.md` sends work to the wrong
+place. The refresh only re-surveys what actually changed:
+
+```
+/handoff:refresh            # refresh the repositories whose sources changed
+/handoff:refresh --check    # report what is stale, change nothing
+/handoff:refresh owner/web  # just this one
+```
+
+`hf doctor` warns once the map is older than `HANDOFF_MAP_MAX_AGE_DAYS` (30 by default),
+so you do not have to remember the cadence yourself.
+
 ## Task references
 
 Every command accepts a reference in any form:
@@ -103,6 +117,7 @@ The first output line says what was resolved: `→ owner/api#42`.
 | Role | Morning | During the day | Before wrapping up |
 |---|---|---|---|
 | orchestrator | `/handoff:check` | `/handoff:answer` on blocks | `/handoff:accept` once everything is closed |
+| either role | `/handoff:refresh` when doctor warns the map is stale | — | — |
 | assignee | `/handoff:inbox` | `/handoff:take`, the work, the PR | `/handoff:report` or `/handoff:block` |
 
 ## What the plugin will not do
