@@ -9,7 +9,7 @@
       "name": "handoff",
       "source": "./plugins/handoff",
       "description": "Semi-automatic task handoff between GitHub repositories through issues, comments, labels and reactions",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "displayName": "Handoff",
       "license": "MIT",
       "repository": "https://github.com/jenkaBY/semi-automation-handoff"

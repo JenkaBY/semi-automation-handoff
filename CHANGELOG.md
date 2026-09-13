@@ -3,6 +3,24 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-09-13
+
+### Added
+
+- **`/handoff:refresh`** — keep the map of neighbouring repositories current.
+  Repositories evolve, and a stale `.handoff/external-repos.md` sends work to the
+  wrong place.
+- `hf peers-check` finds out what actually changed before anything is re-surveyed:
+  one GraphQL request per repository fetches only the blob ids of `README.md`,
+  `AGENTS.md`, `CLAUDE.md` and `.handoff/config.env` — never their contents — and
+  compares them with the new `.handoff/peers.lock`. Subagents are spent only on
+  repositories marked `stale` or `new`. It exits 1 when a refresh is due, and also
+  reports neighbours with no plugin installed or a drifted protocol version.
+- `hf peers-stamp` records a repository as surveyed, after its section is rewritten.
+- `hf doctor` reports the age of the map from the lock file with no network call and
+  warns past `HANDOFF_MAP_MAX_AGE_DAYS` (30 by default), so the reminder to refresh
+  arrives on its own.
+
 ## [0.2.0] — 2026-09-13
 
 Protocol revision after review, plus a full English translation of the plugin and its
