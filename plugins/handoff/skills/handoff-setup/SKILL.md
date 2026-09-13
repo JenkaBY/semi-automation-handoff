@@ -1,6 +1,6 @@
 ---
 name: handoff-setup
-description: Prepare a repository for cross-repository task handoff — check gh and token permissions, create the labels, collect a map of neighbouring repositories into .handoff/external-repos.md and write the configuration. Use when setting the handoff plugin up in a repository for the first time or when the list of participating repositories changes.
+description: Prepare a repository for cross-repository task handoff, or refresh the map of neighbouring repositories — check gh and token permissions, create the labels, survey the neighbours into .handoff/external-repos.md and write the configuration. Use when setting the handoff plugin up in a repository for the first time, when the list of participating repositories changes, or when the descriptions of neighbours have gone stale.
 argument-hint: "[owner/repo ...]"
 ---
 
@@ -77,3 +77,49 @@ All green — suggest the human commits `.handoff/config.env`,
 
 Remind them of the main rule: **the plugin must be installed in every participating
 repository, at the same version.**
+
+## Refreshing the map later
+
+Neighbouring repositories keep evolving: their purpose, stack and layout drift away
+from what the map says. Re-surveying every repository each time is wasteful, so the
+refresh starts by asking what actually changed.
+
+```bash
+hf peers-check
+```
+
+One GraphQL request per repository fetches only the blob ids of `README.md`,
+`AGENTS.md`, `CLAUDE.md` and `.handoff/config.env` — never their contents — and
+compares them with `.handoff/peers.lock`:
+
+| Status | Meaning | What to do |
+|---|---|---|
+| `fresh` | the sources have not changed | skip it, survey nothing |
+| `stale` | the sources changed since the last survey | re-survey this repository |
+| `new` | it is not in the lock file yet | survey it |
+| `unreachable` | 404/403 | tell the human, do not touch its section |
+
+Exit code 1 simply means "something needs a refresh"; exit 0 means the map is current.
+
+Then, **for stale and new repositories only**, run the same subagent survey as in
+step 3, and rewrite just those repositories' sections in `.handoff/external-repos.md`.
+Leave every other section exactly as it is. Update the "Updated" date at the top.
+
+After a repository's section has been rewritten, record it:
+
+```bash
+hf peers-stamp --repo owner/web --fingerprint <fingerprint from peers-check>
+```
+
+Stamp **after** the section is written, never before: a stamp on a failed refresh
+would make a stale description look current.
+
+`peers-check` also warns when a neighbour has no plugin installed or its protocol
+version differs from the local one — repeat those warnings to the developer.
+
+## How often
+
+`hf doctor` reports the age of the map from `.handoff/peers.lock` without any network
+calls, and warns once it exceeds `HANDOFF_MAP_MAX_AGE_DAYS` (30 by default). That is
+the reminder to run `/handoff:refresh` — no cron job required. Refreshing is also
+worth doing right after a neighbour's large release or restructuring.
