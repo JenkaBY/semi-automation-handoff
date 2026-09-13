@@ -38,7 +38,7 @@ esac
 # ---------------------------------------------------------------- gh api ----
 if [ "${1:-}" = "api" ]; then
   shift
-  method="GET"; path=""; jq=""; bodyfile=""; content=""; qowner=""; qname=""
+  method="GET"; path=""; jq=""; bodyfile=""; content=""; qowner=""; qname=""; gqlquery=""
   while [ $# -gt 0 ]; do
     case "$1" in
       --method) method="$2"; shift 2 ;;
@@ -48,6 +48,7 @@ if [ "${1:-}" = "api" ]; then
         case "$2" in
           body=@*) bodyfile="${2#body=@}" ;;
           content=*) content="${2#content=}" ;;
+          query=*) gqlquery="${2#query=}" ;;
           owner=*) qowner="${2#owner=}" ;;
           name=*) qname="${2#name=}" ;;
         esac
@@ -60,6 +61,21 @@ if [ "${1:-}" = "api" ]; then
     user) printf 'mockuser'; exit 0 ;;
     rate_limit) printf '5000'; exit 0 ;;
     graphql)
+      case "$gqlquery" in
+        *readme:*)
+          pf="$D/peers/$(printf %s "$qowner/$qname" | tr / _)"
+          [ -f "$pf.src" ] || { echo "HTTP 404" >&2; exit 1; }
+          src=$(cat "$pf.src")
+          proto=$(cat "$pf.proto" 2>/dev/null || printf '')
+          if [ -n "$proto" ]; then
+            printf '%s	-	-	cfgoid	HANDOFF_PROTOCOL=%s
+' "$src" "$proto"
+          else
+            printf '%s	-	-	-	-
+' "$src"
+          fi
+          exit 0 ;;
+      esac
       dir=$(idir "$qowner/$qname")
       [ -d "$dir" ] || exit 0
       for f in "$dir"/*.body; do

@@ -243,6 +243,31 @@ check "closed task → DONE"   "$(printf '%s' "$out" | head -1 | cut -f2 | awk '
 check "columns did not shift" "$(printf '%s' "$out" | head -1 | cut -f5)" "T"
 teardown
 
+echo "== peers-check: only re-survey what actually changed =="
+setup
+mkdir -p "$HF_MOCK_DIR/peers"
+printf 'readme-v1' > "$HF_MOCK_DIR/peers/owner_web.src"
+printf '1' > "$HF_MOCK_DIR/peers/owner_web.proto"
+printf 'readme-v1' > "$HF_MOCK_DIR/peers/owner_infra.src"
+out=$(bash "$HF" peers-check --repo owner/web 2>/dev/null); rc=$?
+check "unknown peer → new"        "$(printf '%s' "$out" | cut -f2)" "new"
+check "needs refresh → exit 1"    "$rc" "1"
+fp=$(printf '%s' "$out" | cut -f3)
+bash "$HF" peers-stamp --repo owner/web --fingerprint "$fp" >/dev/null 2>&1
+out=$(bash "$HF" peers-check --repo owner/web 2>/dev/null); rc=$?
+check "after stamping → fresh"    "$(printf '%s' "$out" | cut -f2)" "fresh"
+check "nothing to do → exit 0"    "$rc" "0"
+printf 'readme-v2' > "$HF_MOCK_DIR/peers/owner_web.src"
+out=$(bash "$HF" peers-check --repo owner/web 2>/dev/null); rc=$?
+check "sources changed → stale"   "$(printf '%s' "$out" | cut -f2)" "stale"
+check "stale → exit 1"            "$rc" "1"
+out=$(bash "$HF" peers-check --repo owner/infra 2>/dev/null)
+check "no config.env → plugin no" "$(printf '%s' "$out" | cut -f5)" "no"
+out=$(bash "$HF" peers-check --repo owner/gone 2>/dev/null); rc=$?
+check "missing repo → unreachable" "$(printf '%s' "$out" | cut -f2)" "unreachable"
+check "lock records the date"     "$(cut -f3 "$HANDOFF_ROOT/.handoff/peers.lock")" "$(date -u +%Y-%m-%d)"
+teardown
+
 echo
 printf 'Total: %s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
