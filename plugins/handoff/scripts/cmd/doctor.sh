@@ -62,6 +62,19 @@ if [ -n "$repo" ]; then
   fi
 fi
 
+# 5. age of the neighbours map (local check, no network)
+if [ -n "${HANDOFF_PEERS:-}" ]; then
+  if age=$(hf_peers_lock_age_days) && [ -n "$age" ]; then
+    if [ "$age" -ge "${HANDOFF_MAP_MAX_AGE_DAYS:-30}" ] 2>/dev/null; then
+      row "WARN" "peers-map" "last refreshed ${age}d ago — run /handoff:refresh"
+    else
+      row "ok" "peers-map" "refreshed ${age}d ago"
+    fi
+  else
+    row "WARN" "peers-map" "never refreshed — run /handoff:refresh"
+  fi
+fi
+
 # 5. peers: access and effective permissions
 for peer in ${HANDOFF_PEERS:-}; do
   case "$(hf_api_probe "repos/$peer")" in

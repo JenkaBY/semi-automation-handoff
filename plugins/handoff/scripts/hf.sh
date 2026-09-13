@@ -20,6 +20,7 @@ export HF_SCRIPTS_DIR HF_PLUGIN_ROOT
 . "$HF_SCRIPTS_DIR/lib/table.sh"
 . "$HF_SCRIPTS_DIR/lib/retry.sh"
 . "$HF_SCRIPTS_DIR/lib/meta.sh"
+. "$HF_SCRIPTS_DIR/lib/peers.sh"
 
 hf_usage() {
   cat <<'USAGE'
@@ -29,6 +30,8 @@ Environment and setup:
   doctor [--repo SLUG]              diagnostics: gh, token, permissions, labels, versions
   labels-ensure [--repo SLUG]       create the two service labels (idempotent)
   config-init [--repo SLUG] --peers "a b"
+  peers-check [--repo SLUG]         which neighbours' descriptions went stale
+  peers-stamp --repo SLUG           mark a neighbour's description as up to date
   version                           plugin and protocol versions
 
 Orchestrator side:
