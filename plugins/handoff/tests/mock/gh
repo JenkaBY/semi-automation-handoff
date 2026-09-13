@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+# gh CLI mock for offline tests: a tiny file-backed model of GitHub.
+# State: $HF_MOCK_DIR/{comments,issues,seq,comment_index}
+# Concurrent writes: HF_MOCK_INTERFERE=<the GET of updated_at after which another
+# agent edits the comment>; HF_MOCK_INTERFERE_ALWAYS=1 — on every GET.
+set -u
+D="${HF_MOCK_DIR:?HF_MOCK_DIR не задан}"
+mkdir -p "$D/comments" "$D/issues"
+[ -f "$D/seq" ] || echo 1000 > "$D/seq"
+
+next_id() { local n; n=$(cat "$D/seq"); echo $((n+1)) > "$D/seq"; printf '%s' "$n"; }
+ts() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+bump() { printf '%s-%s' "$(ts)" "$RANDOM" > "$D/comments/$1.ts"; }
+idir() { printf '%s/issues/%s' "$D" "$(printf '%s' "$1" | tr '/' '_')"; }
+
+gql_content() {
+  case "$1" in
+    +1) printf 'THUMBS_UP' ;; -1) printf 'THUMBS_DOWN' ;;
+    eyes) printf 'EYES' ;; confused) printf 'CONFUSED' ;;
+    rocket) printf 'ROCKET' ;; hooray) printf 'HOORAY' ;;
+    heart) printf 'HEART' ;; laugh) printf 'LAUGH' ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+interfere() {
+  printf '| `zzz/other` | [#99](u) | WIP | 2026-01-01 00:00 | — | — |\n' >> "$D/comments/$1.body"
+  bump "$1"
+}
+
+case "${1:-}" in
+  --version) echo "gh version 9.9.9 (mock)"; exit 0 ;;
+  auth) exit 0 ;;
+  repo) printf '%s' "${HF_MOCK_REPO:-owner/self}"; exit 0 ;;
+  label) exit 0 ;;
+esac
+
+# ---------------------------------------------------------------- gh api ----
+if [ "${1:-}" = "api" ]; then
+  shift
+  method="GET"; path=""; jq=""; bodyfile=""; content=""; qowner=""; qname=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --method) method="$2"; shift 2 ;;
+      --jq) jq="$2"; shift 2 ;;
+      --paginate) shift ;;
+      -F|-f)
+        case "$2" in
+          body=@*) bodyfile="${2#body=@}" ;;
+          content=*) content="${2#content=}" ;;
+          owner=*) qowner="${2#owner=}" ;;
+          name=*) qname="${2#name=}" ;;
+        esac
+        shift 2 ;;
+      *) [ -z "$path" ] && path="$1"; shift ;;
+    esac
+  done
+
+  case "$path" in
+    user) printf 'mockuser'; exit 0 ;;
+    rate_limit) printf '5000'; exit 0 ;;
+    graphql)
+      dir=$(idir "$qowner/$qname")
+      [ -d "$dir" ] || exit 0
+      for f in "$dir"/*.body; do
+        [ -f "$f" ] || continue
+        n=$(basename "$f" .body)
+        grep -Fxq "agent-task" "$dir/$n.labels" 2>/dev/null || continue
+        st=$(cat "$dir/$n.state")
+        rl=""
+        if [ -f "$dir/$n.reactions" ]; then
+          while read -r _id r; do [ -n "$r" ] && rl="$rl $(gql_content "$r")"; done < "$dir/$n.reactions"
+        fi
+        from=$(grep -m1 '^from:' "$f" || printf '')
+        [ -n "$from" ] || from="-"
+        [ -n "$rl" ] || rl="-"
+        printf '%s\t2026-01-01\t%s\t%s\t%s\t%s\n' "$n" "${rl# }" "$st" "$from" "$(cat "$dir/$n.title")"
+      done
+      exit 0 ;;
+  esac
+
+  case "$path" in
+    */issues/comments/*/reactions)
+      cid=${path%/reactions}; cid=${cid##*/}
+      case "$method" in
+        POST) printf '%s\n' "$content" >> "$D/comments/$cid.reactions"; printf '{}'; exit 0 ;;
+        GET)  cat "$D/comments/$cid.reactions" 2>/dev/null; exit 0 ;;
+      esac ;;
+    */issues/comments/*)
+      cid=${path##*/}
+      case "$method" in
+        GET)
+          case "$jq" in
+            *updated_at*)
+              cat "$D/comments/$cid.ts" 2>/dev/null || { echo "HTTP 404" >&2; exit 1; }
+              n=$(cat "$D/getcount" 2>/dev/null || echo 0); n=$((n+1)); echo "$n" > "$D/getcount"
+              if [ -n "${HF_MOCK_INTERFERE_ALWAYS:-}" ]; then interfere "$cid"
+              elif [ -n "${HF_MOCK_INTERFERE:-}" ] && [ "$n" = "$HF_MOCK_INTERFERE" ]; then interfere "$cid"; fi
+              exit 0 ;;
+            *) cat "$D/comments/$cid.body" 2>/dev/null || { echo "HTTP 404" >&2; exit 1; }; exit 0 ;;
+          esac ;;
+        PATCH) cp "$bodyfile" "$D/comments/$cid.body"; bump "$cid"; printf '{}'; exit 0 ;;
+      esac ;;
+    */issues/*/reactions/*)
+      rid=${path##*/}; rest=${path%/reactions/*}; rest=${rest#repos/}
+      repo=${rest%%/issues/*}; num=${rest#*/issues/}
+      f="$(idir "$repo")/$num.reactions"
+      if [ -f "$f" ]; then
+        grep -v "^$rid " "$f" > "$f.n" 2>/dev/null || : > "$f.n"
+        mv "$f.n" "$f"
+      fi
+      printf '{}'; exit 0 ;;
+    */issues/*/reactions)
+      rest=${path#repos/}; repo=${rest%%/issues/*}; num=${rest#*/issues/}; num=${num%/reactions}
+      dir=$(idir "$repo")
+      case "$method" in
+        POST) printf '%s %s\n' "$(next_id)" "$content" >> "$dir/$num.reactions"; printf '{}'; exit 0 ;;
+        GET)
+          case "$jq" in
+            *user.login*) awk '{printf "%s\t%s\n", $1, $2}' "$dir/$num.reactions" 2>/dev/null; exit 0 ;;
+            *) awk '{print $2}' "$dir/$num.reactions" 2>/dev/null; exit 0 ;;
+          esac ;;
+      esac ;;
+    */issues/*/comments)
+      rest=${path#repos/}; repo=${rest%%/issues/*}; num=${rest#*/issues/}; num=${num%/comments}
+      case "$method" in
+        POST) cid=$(next_id); cp "$bodyfile" "$D/comments/$cid.body"; bump "$cid"
+              printf '%s %s\n' "$cid" "$repo#$num" >> "$D/comment_index"; printf '%s' "$cid"; exit 0 ;;
+        GET)
+          marker='<!-- handoff:routing'
+          case "$jq" in *handoff:question*) marker='<!-- handoff:question' ;; esac
+          while read -r cid owner; do
+            [ "$owner" = "$repo#$num" ] || continue
+            head -1 "$D/comments/$cid.body" 2>/dev/null | grep -q "^$marker" || continue
+            case "$jq" in
+              *"Answer"*) grep -q '^### ' "$D/comments/$cid.body" && \
+                         grep -q 'Answer' "$D/comments/$cid.body" && continue ;;
+            esac
+            printf '%s\n' "$cid"
+          done < "$D/comment_index" 2>/dev/null
+          exit 0 ;;
+      esac ;;
+    repos/*) printf '{}'; exit 0 ;;
+  esac
+  printf '{}'; exit 0
+fi
+
+# -------------------------------------------------------------- gh issue ----
+if [ "${1:-}" = "issue" ]; then
+  sub="$2"; shift 2
+  num=""; repo=""; title=""; bodyfile=""; labels=""; addl=""; reml=""; jq=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -R) repo="$2"; shift 2 ;;
+      -t|--title) title="$2"; shift 2 ;;
+      -F|--body-file) bodyfile="$2"; shift 2 ;;
+      -l|--label) labels="$2"; shift 2 ;;
+      --add-label) addl="$2"; shift 2 ;;
+      --remove-label) reml="$2"; shift 2 ;;
+      --json) shift 2 ;;
+      --jq) jq="$2"; shift 2 ;;
+      --state|--limit|-r) shift 2 ;;
+      -*) shift ;;
+      *) [ -z "$num" ] && num="$1"; shift ;;
+    esac
+  done
+  dir=$(idir "$repo"); mkdir -p "$dir"
+  case "$sub" in
+    create)
+      n=$(cat "$dir/seq" 2>/dev/null || echo 1); echo $((n+1)) > "$dir/seq"
+      cp "$bodyfile" "$dir/$n.body"; printf '%s' "$title" > "$dir/$n.title"
+      printf '%s' "$labels" | tr ',' '\n' > "$dir/$n.labels"; printf 'OPEN' > "$dir/$n.state"
+      : > "$dir/$n.reactions"
+      printf 'https://github.com/%s/issues/%s\n' "$repo" "$n"; exit 0 ;;
+    edit)
+      [ -n "$bodyfile" ] && cp "$bodyfile" "$dir/$num.body"
+      [ -n "$addl" ] && printf '%s\n' "$addl" | tr ',' '\n' >> "$dir/$num.labels"
+      exit 0 ;;
+    view)
+      [ -f "$dir/$num.body" ] || { echo "HTTP 404" >&2; exit 1; }
+      lab=$(grep -v '^$' "$dir/$num.labels" 2>/dev/null | paste -sd, -)
+      state=$(cat "$dir/$num.state")
+      rl=""
+      if [ -f "$dir/$num.reactions" ]; then
+        while read -r _id r; do [ -n "$r" ] && rl="$rl $(gql_content "$r")"; done < "$dir/$num.reactions"
+      fi
+      case "$jq" in
+        *closedByPullRequestsReferences*)
+          printf '%s\t%s\t2026-01-01T00:00:00Z\t%s\n' "$state" "${rl# }" "${HF_MOCK_PR:-}" ;;
+        *---BODY---*)
+          printf 'TITLE\t%s\nURL\thttps://github.com/%s/issues/%s\nLABELS\t%s\n---BODY---\n' \
+            "$(cat "$dir/$num.title")" "$repo" "$num" "$lab"
+          cat "$dir/$num.body" ;;
+        *.state*) printf '%s\n' "$state" ;;
+        *.body*) cat "$dir/$num.body" ;;
+        *.title*) cat "$dir/$num.title"; echo ;;
+        *labels*) printf '%s\n' "$lab" ;;
+        *) cat "$dir/$num.body" ;;
+      esac
+      exit 0 ;;
+    close) printf 'CLOSED' > "$dir/$num.state"; exit 0 ;;
+    reopen) printf 'OPEN' > "$dir/$num.state"; exit 0 ;;
+    list) exit 0 ;;
+  esac
+fi
+
+exit 0
