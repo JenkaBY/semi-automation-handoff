@@ -111,6 +111,18 @@ Two independent numbers:
   Install instructions in `README.md` and both `docs/*/setup.md` pin a tag, so a release also
   updates `@vX.Y.Z` there and adds a `CHANGELOG.md` entry.
 
+## Project skills
+
+`.claude/skills/` holds four skills for maintaining this repository. They load
+automatically and can also be invoked by name:
+
+| Skill | Reach for it when |
+|---|---|
+| `hf-subcommand` | adding or changing an `hf` verb — registering one means five places |
+| `handoff-release` | bumping the version — it lives in two manifests and five documents |
+| `handoff-i18n` | touching docs or any string the plugin writes into GitHub |
+| `gh-mock` | a test needs an endpoint the mock has never seen |
+
 ## Commits
 
 Conventional Commits, grouped by meaning — one commit per group, not one per file. The body
