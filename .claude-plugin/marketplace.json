@@ -1,0 +1,18 @@
+{
+  "name": "handoff-marketplace",
+  "owner": {
+    "name": "jenkaBY",
+    "url": "https://github.com/jenkaBY"
+  },
+  "plugins": [
+    {
+      "name": "handoff",
+      "source": "./plugins/handoff",
+      "description": "Semi-automatic task handoff between GitHub repositories through issues, comments, labels and reactions",
+      "version": "1.0.0",
+      "displayName": "Handoff",
+      "license": "MIT",
+      "repository": "https://github.com/jenkaBY/semi-automation-handoff"
+    }
+  ]
+}
