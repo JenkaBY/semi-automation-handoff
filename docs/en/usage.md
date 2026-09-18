@@ -35,19 +35,41 @@ On top of an existing issue filed by a human:
 /handoff:take 17
 ```
 
-`take` adds 👀, pulls the requester's context and starts the work on a dedicated branch.
+`take` adds 👀, pulls the requester's context and then **writes a plan and waits for your
+approval before changing anything**: the steps with the files they touch, what is out of
+scope, how it will be verified, and the branch it proposes — the current one, a new branch
+off the development branch (it suggests a name), or one you name. It never creates or
+switches branches on its own, because that decision determines what ends up being reviewed
+and released.
+
+Anything the task does not specify becomes an open question rather than an assumption. If it
+is about how to build something in this repository, the agent asks you during the plan
+review; if only the requester can say what is actually wanted, it uses `/handoff:block` so
+the task is paused and the question is recorded where they will see it. A plan carrying open
+questions is not executed.
 
 ## Reporting
 
-Before reporting, the changes are opened as a pull request whose body says `Closes #17`:
-that is how the PR lands in the task's Development section.
+The agent commits locally and stops there. **It never pushes and never opens the pull
+request** — `gh pr create` would push the branch as a side effect. It hands you the commands
+instead:
+
+```bash
+git push -u origin <branch>
+gh pr create --fill --body "Closes #17"
+```
+
+`Closes #17` is what puts the pull request into the task's Development section.
 
 ```
 /handoff:report
 /handoff:report 17 short note on what was done
 ```
 
-`report` publishes the result comment, adds 🚀 and **closes the task**.
+`report` first shows what is still unpushed and asks whether to report now or wait. Then it
+publishes the result comment, adds 🚀 and **closes the task**. Reporting before the pull
+request exists is fine — the requester's summary flags it as `⚠no-PR`, which is an honest
+signal rather than a failure.
 
 ## Asking a question and pausing
 

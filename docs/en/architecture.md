@@ -32,7 +32,7 @@ changes committed on a branch
                                                           │
                                                /handoff:inbox → /handoff:take
                                                           │  reaction 👀
-                                                          │  branch + work + PR (Closes #17)
+                                                          │  branch agreed with the developer, then work
                                             ┌─────────────┴─────────────┐
                                         finished                   human needed
                                             │                           │
@@ -108,3 +108,6 @@ discovered outside PATH in the usual install locations.
   a new parent task, that is, a new chain.
 - The plugin never changes code in other repositories and never commits on the
   developer's behalf: with an unclean tree, `dispatch` stops and asks.
+- Nothing leaves the machine on the agent's initiative. It asks which branch to use before
+  touching anything, and it never pushes or opens a pull request — those wait for an
+  explicit instruction, because a push is immediately visible to everyone else.

@@ -3,6 +3,37 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **`/handoff:take` plans before it works.** It writes a plan — steps with the real
+  files, what is out of scope, how it will be verified, the branch it proposes — and
+  waits for the developer to approve it before changing anything. The task comes from
+  another repository whose author is not in the room, so the plan is the cheapest
+  moment to find out the request was understood differently than it was meant.
+- **Missing details are never invented.** What the task does not say becomes an open
+  question routed to whoever can answer it: the developer in the session for "how do we
+  build this here", `/handoff:block` for "what does the requester actually want". A plan
+  with open questions is not executed.
+- **The branch is agreed, not chosen by the agent:** the current branch, a new one off
+  the development branch (it proposes a name), or one the developer names. Which branch
+  the work lands on decides what gets reviewed and released, and only the developer
+  knows what else is in flight.
+- **The agent no longer pushes or opens pull requests.** It commits locally and hands
+  over the commands; `gh pr create` pushes the branch as a side effect, so it counts
+  as pushing. Both wait for an explicit instruction, because a push is immediately
+  visible to everyone else.
+- `/handoff:report` reports what is still unpushed and asks whether to report now or
+  wait. Closing a task before its pull request exists stays allowed — the requester
+  sees `⚠no-PR`, which is honest — but it is the developer's call.
+
+### Added
+
+- `templates/work-plan.md` — the plan format the assignee fills in: 20 lines, real
+  file names, explicit out-of-scope, and blocking open questions addressed to either
+  the developer or the requester.
+
 ## [0.3.0] — 2026-09-13
 
 ### Added
