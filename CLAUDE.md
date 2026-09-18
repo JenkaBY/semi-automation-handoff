@@ -123,7 +123,18 @@ automatically and can also be invoked by name:
 | `handoff-i18n` | touching docs or any string the plugin writes into GitHub |
 | `gh-mock` | a test needs an endpoint the mock has never seen |
 
-## Commits
+## Git
+
+Never commit, amend, tag or push on your own initiative — however finished the work
+looks. Finish the change, leave it in the working tree, and end by saying what is
+uncommitted. Creating history is the user's decision, and a push is visible to others
+the moment it happens.
+
+Each git-writing action is authorised separately: "commit this" is not permission to
+push, and "push the branch" is not permission to tag. Staging with `git add` to show a
+diff is fine; producing a commit is not.
+
+### Commit conventions (when a commit is requested)
 
 Conventional Commits, grouped by meaning — one commit per group, not one per file. The body
 explains why the group exists, not what the diff already shows.

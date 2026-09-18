@@ -20,8 +20,9 @@ UTF-8 always starts with `0xD0` or `0xD1`, so search for those:
 LC_ALL=C grep -rn $'[\xd0\xd1]' --exclude-dir=.git --exclude-dir=ru --exclude='*.zip' .
 ```
 
-Everything it reports should be one of the deliberate `*Русская версия: …*` links at the top
-of each English document. Anything else is a miss.
+Everything it reports should be either one of the deliberate `*Русская версия: …*` links at
+the top of each English document, or the `[А-Яа-я]` pattern quoted in this skill and in
+CLAUDE.md while explaining why the naive grep fails. Anything else is a miss.
 
 ## What must change together
 
