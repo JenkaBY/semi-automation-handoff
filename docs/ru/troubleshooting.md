@@ -113,7 +113,7 @@ hf version    # в каждом репозитории
 Приведите все репозитории к одному тегу marketplace:
 
 ```
-/plugin marketplace add jenkaBY/semi-automation-handoff@v0.3.0
+/plugin marketplace add jenkaBY/semi-automation-handoff@v1.0.0
 ```
 
 ## Проверка без сети

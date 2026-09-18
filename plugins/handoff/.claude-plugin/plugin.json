@@ -1,7 +1,7 @@
 {
   "name": "handoff",
   "displayName": "Handoff",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Semi-automatic task handoff between GitHub repositories: a parent task, a result comment carrying context, a routing comment with statuses, and dependent tasks in neighbouring repositories",
   "author": {
     "name": "jenkaBY",

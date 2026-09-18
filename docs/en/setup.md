@@ -87,7 +87,7 @@ export HANDOFF_GH="/opt/gh/bin/gh"              # Linux / macOS
 In every participating repository:
 
 ```bash
-/plugin marketplace add jenkaBY/semi-automation-handoff@v0.3.0
+/plugin marketplace add jenkaBY/semi-automation-handoff@v1.0.0
 /plugin install handoff@handoff-marketplace
 ```
 

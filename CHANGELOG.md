@@ -3,7 +3,14 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.0] — 2026-09-18
+
+First stable release. The command surface and the wire protocol are now considered
+settled: from here on, a breaking change to either gets a major bump.
+
+**Protocol stays at version 1**, so this is not a fleet-wide upgrade — repositories on
+0.3.0 and 1.0.0 still understand each other's tasks. Upgrade them when convenient; what
+changes here is how the assignee agent behaves locally, not what it writes into GitHub.
 
 ### Changed
 

@@ -113,7 +113,7 @@ hf version    # in every repository
 Bring every repository to the same marketplace tag:
 
 ```
-/plugin marketplace add jenkaBY/semi-automation-handoff@v0.3.0
+/plugin marketplace add jenkaBY/semi-automation-handoff@v1.0.0
 ```
 
 ## Checking without a network

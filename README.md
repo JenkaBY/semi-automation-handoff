@@ -22,7 +22,7 @@ lives in GitHub itself: issues, comments and reactions. No external service.
 
 ```bash
 # 1. in every participating repository
-/plugin marketplace add jenkaBY/semi-automation-handoff@v0.3.0
+/plugin marketplace add jenkaBY/semi-automation-handoff@v1.0.0
 /plugin install handoff@handoff-marketplace
 
 # 2. setup
